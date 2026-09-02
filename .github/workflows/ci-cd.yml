@@ -1,39 +1,40 @@
 name: CI/CD Pipeline
 
 on: 
-   push:
-      branches: [aula-25/08]
+  push:
+    branches: [aula-25/08]
 
 jobs: 
-    build-test-deploy:
-      runs-on: ubuntu-latest
+  build-test-deploy:
+    runs-on: ubuntu-latest
 
-      steps:
-          - name: Baixar o código do repositório
-            uses: actions/checkout@v4
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v4
 
-          - name: Configurar o Python
-            uses: actions/setup-python@v5
-            with:
-              python-version: '3.12'
+      - name: Configurar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
 
-          - name: Instalar as dependências
-            run: pip install flask pytest
+      - name: Instalar as dependências
+        run: pip install flask pytest
 
-          - name: Rodar testes automatizados
-            run: pytest tests/
+      - name: Rodar testes automatizados
+        env:
+          PYTHONPATH: .
+        run: pytest
 
-          - name: Subir o servidor em segundo planoo
-            run: |
-              python app.py &
-              sleep 2
+      - name: Subir o servidor em segundo plano
+        run: |
+          python app.py &
+          sleep 3
 
-          - name: Verificar saúde do servidor
-            run: |
-              response=$(curl -s http://localhost:5000/health)
-              echo "Resposta Recebida: $response"
-              echo "$response" | grep -q '"status": "ok"' || (echo "Servidor não respondeu corretamente" && exit 1)
+      - name: Verificar saúde do servidor
+        run: |
+          response=$(curl -s http://localhost:5000/health)
+          echo "Resposta Recebida: $response"
+          echo "$response" | grep -q '"status": "ok"' || (echo "Servidor não respondeu corretamente" && exit 1)
 
-
-          - name: Derrubar o servidor
-            run: pkill -f app.py || true
+      - name: Derrubar o servidor
+        run: pkill -f app.py || true
